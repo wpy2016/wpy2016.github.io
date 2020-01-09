@@ -85,23 +85,23 @@
 <meta property="og:url" content="https://wpy2016.github.io/2020/01/09/Mysql%20InnoDB%20B+%E6%A0%91%E7%B4%A2%E5%BC%95%E7%BB%84%E7%BB%87%E7%BB%93%E6%9E%84/index.html">
 <meta property="og:site_name" content="小白梦想家">
 <meta property="og:description" content="在计算机中磁盘存储数据最小单元是扇区，一个扇区的大小是512字节，而文件系统（例如XFS&#x2F;EXT4）他的最小单元是块，一个块的大小是4k，InnoDB存储引擎也有自己的最小储存单元——页（Page），一个页的大小是16K。 下面几张图可以帮你理解最小存储单元 文件系统中一个文件大小只有1个字节，但不得不占磁盘上4KB的空间  innodb的所有数据文件（后缀为ibd的文件），它的大小始终都是163">
-<meta property="og:image" content="https://wpy2016.github.io/2020/01/09/Mysql%20InnoDB%20B+%E6%A0%91%E7%B4%A2%E5%BC%95%E7%BB%84%E7%BB%87%E7%BB%93%E6%9E%84/!%5B%5D(https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index0.png?raw=true">
-<meta property="og:image" content="https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index1.png?raw=true">
-<meta property="og:image" content="https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index2.png?raw=true">
-<meta property="og:image" content="https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index3.png?raw=true">
-<meta property="og:image" content="https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index4.png?raw=true">
-<meta property="og:image" content="https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index5.png?raw=true">
-<meta property="og:image" content="https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index6.png?raw=true">
-<meta property="og:image" content="https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index6.png?raw=true">
-<meta property="og:image" content="https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index7.png?raw=true">
+<meta property="og:image" content="https://wpy2016.github.io/2020/01/09/Mysql%20InnoDB%20B+%E6%A0%91%E7%B4%A2%E5%BC%95%E7%BB%84%E7%BB%87%E7%BB%93%E6%9E%84/!%5B%5D(https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index0.png?raw=true">
+<meta property="og:image" content="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index1.png?raw=true">
+<meta property="og:image" content="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index2.png?raw=true">
+<meta property="og:image" content="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index3.png?raw=true">
+<meta property="og:image" content="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index4.png?raw=true">
+<meta property="og:image" content="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index5.png?raw=true">
+<meta property="og:image" content="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index6.png?raw=true">
+<meta property="og:image" content="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index6.png?raw=true">
+<meta property="og:image" content="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index7.png?raw=true">
 <meta property="article:published_time" content="2020-01-08T17:39:04.000Z">
-<meta property="article:modified_time" content="2020-01-08T17:41:23.046Z">
+<meta property="article:modified_time" content="2020-01-09T16:43:48.868Z">
 <meta property="article:author" content="XiaoBai">
 <meta property="article:tag" content="Mysql">
 <meta property="article:tag" content="B+树">
 <meta property="article:tag" content="索引">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://wpy2016.github.io/2020/01/09/Mysql%20InnoDB%20B+%E6%A0%91%E7%B4%A2%E5%BC%95%E7%BB%84%E7%BB%87%E7%BB%93%E6%9E%84/!%5B%5D(https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index0.png?raw=true">
+<meta name="twitter:image" content="https://wpy2016.github.io/2020/01/09/Mysql%20InnoDB%20B+%E6%A0%91%E7%B4%A2%E5%BC%95%E7%BB%84%E7%BB%87%E7%BB%93%E6%9E%84/!%5B%5D(https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index0.png?raw=true">
 
 
 
@@ -354,18 +354,18 @@
         <p>在计算机中磁盘存储数据最小单元是扇区，一个扇区的大小是512字节，而文件系统（例如XFS/EXT4）他的最小单元是块，一个块的大小是4k，InnoDB存储引擎也有自己的最小储存单元——页（Page），一个页的大小是16K。</p>
 <p>下面几张图可以帮你理解最小存储单元</p>
 <p>文件系统中一个文件大小只有1个字节，但不得不占磁盘上4KB的空间</p>
-<p><img src="!%5B%5D(https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index0.png?raw=true" alt="mysql_bplus_tree_index0"></p>
+<p><img src="!%5B%5D(https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index0.png?raw=true" alt="mysql_bplus_tree_index0"></p>
 <p>innodb的所有数据文件（后缀为ibd的文件），它的大小始终都是16384（16k）的整数倍</p>
-<p><img src="https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index1.png?raw=true" alt="mysql_bplus_tree_index1"></p>
+<p><img src="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index1.png?raw=true" alt="mysql_bplus_tree_index1"></p>
 <p>磁盘扇区、文件系统、InnoDB存储引擎都有各自的最小存储单元</p>
-<p><img src="https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index2.png?raw=true" alt="mysql_bplus_tree_index2"></p>
+<p><img src="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index2.png?raw=true" alt="mysql_bplus_tree_index2"></p>
 <p>在MySQL中我们的InnoDB页的大小默认是16k，当然也可以通过参数设置</p>
-<p><img src="https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index3.png?raw=true" alt="mysql_bplus_tree_index3"></p>
+<p><img src="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index3.png?raw=true" alt="mysql_bplus_tree_index3"></p>
 <p>数据表中的数据都是存储在页中的，所以一个页中能存储多少行数据呢？假设一行数据的大小是1k，那么一个页可以存放16行这样的数据</p>
 <p>如果数据库只按这样的方式存储，那么如何查找数据就成为一个问题</p>
 <p>因为我们不知道要查找的数据存在哪个页中，也不可能把所有的页遍历一遍，那样太慢了。</p>
 <p>所以人们想了一个办法，用B+树的方式组织这些数据。如图所示</p>
-<p><img src="https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index4.png?raw=true" alt="mysql_bplus_tree_index4"></p>
+<p><img src="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index4.png?raw=true" alt="mysql_bplus_tree_index4"></p>
 <p>我们先将数据记录按主键进行排序，分别存放在不同的页中（为了便于理解我们这里一个页中只存放3条记录，实际情况可以存放很多）</p>
 <p>除了存放数据的页以外，还有存放键值+指针的页，如图中page number=3的页，该页存放键值和指向数据页的指针，这样的页由N个键值+指针组成</p>
 <p>当然它也是排好序的。这样的数据组织形式，我们称为索引组织表</p>
@@ -393,20 +393,20 @@
 <p>在InnoDB的表空间文件中，约定<strong>page number为3</strong>的代表主键索引的根页，而在根页偏移量为<strong>64</strong>的地方存放了该B+树的page level</p>
 <p>如果page level为1，树高为2，page level为2，则树高为3。即B+树的高度=page level+1；下面我们将从实际环境中尝试找到这个page level</p>
 <p>在实际操作之前，你可以通过InnoDB元数据表确认主键索引根页的page number为3，你也可以从《InnoDB存储引擎》这本书中得到确认</p>
-<p><img src="https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index5.png?raw=true" alt="mysql_bplus_tree_index5"></p>
-<p><img src="https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index6.png?raw=true" alt="mysql_bplus_tree_index6"></p>
+<p><img src="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index5.png?raw=true" alt="mysql_bplus_tree_index5"></p>
+<p><img src="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index6.png?raw=true" alt="mysql_bplus_tree_index6"></p>
 <p>可以看出数据库dbt3下的customer表、lineitem表主键索引根页的page number均为3，而其他的二级索引page number为4</p>
 <p>下面我们对数据库表空间文件做想相关的解析</p>
 <p>因为主键索引B+树的根页在整个表空间文件中的第3个页开始，所以可以算出它在文件中的偏移量：16384*3=49152（16384为页大小）</p>
 <p>另外根据《InnoDB存储引擎》中描述在根页的64偏移量位置前2个字节，保存了page level的值</p>
 <p>因此我们想要的page level的值在整个文件中的偏移量为：16384*3+64=49152+64=49216，前2个字节中</p>
 <p>接下来我们用hexdump工具，查看表空间文件指定偏移量上的数据</p>
-<p><img src="https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index6.png?raw=true" alt="mysql_bplus_tree_index7"></p>
+<p><img src="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index6.png?raw=true" alt="mysql_bplus_tree_index7"></p>
 <p><strong>linetem表的page level为2，B+树高度为page level+1=3；</strong></p>
 <p><strong>region表的page level为0，B+树高度为page level+1=1；</strong></p>
 <p><strong>customer表的page level为2，B+树高度为page level+1=3；</strong></p>
 <p>这三张表的数据量如下</p>
-<p><img src="https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index7.png?raw=true" alt="mysql_bplus_tree_index8"></p>
+<p><img src="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index7.png?raw=true" alt="mysql_bplus_tree_index8"></p>
 <p>lineitem表的数据行数为600多万，B+树高度为3，customer表数据行数只有15万，B+树高度也为3。可以看出尽管数据量差异较大，这两个表树的高度都是3</p>
 <p>换句话说这两个表通过索引查询效率并没有太大差异，因为都只需要做3次IO。那么如果有一张表行数是一千万，那么他的B+树高度依旧是3，查询效率仍然不会相差太大</p>
 <p>region表只有5行数据，当然他的B+树高度为1</p>
@@ -444,8 +444,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2020/01/09/TCC%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/" rel="next" title="TCC分布式事务">
-                <i class="fa fa-chevron-left"></i> TCC分布式事务
+              <a href="/2020/01/09/Spring%20Cloud%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/" rel="next" title="Spring Cloud 底层原理">
+                <i class="fa fa-chevron-left"></i> Spring Cloud 底层原理
               </a>
             
           </div>
@@ -454,8 +454,8 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2020/01/09/Spring%20Cloud%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/" rel="prev" title="Spring Cloud 底层原理">
-                Spring Cloud 底层原理 <i class="fa fa-chevron-right"></i>
+              <a href="/2020/01/09/JAVA%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" rel="prev" title="JAVA动态代理的实现原理">
+                JAVA动态代理的实现原理 <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>

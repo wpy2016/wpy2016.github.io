@@ -531,7 +531,7 @@ TCC或者GTS(阿里)
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://wpy2016.github.io/2020/01/09/Mysql%20B+%E6%A0%91%E7%B4%A2%E5%BC%95%E5%88%86%E8%A3%82BUG-%E5%88%A9%E7%94%A8%E7%8E%87%E4%BD%8E/">
+    <link itemprop="mainEntityOfPage" href="https://wpy2016.github.io/2020/01/09/Mysql%20InnoDB%20B+%E6%A0%91%E7%B4%A2%E5%BC%95%E7%BB%84%E7%BB%87%E7%BB%93%E6%9E%84/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="XiaoBai">
@@ -550,7 +550,7 @@ TCC或者GTS(阿里)
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2020/01/09/Mysql%20B+%E6%A0%91%E7%B4%A2%E5%BC%95%E5%88%86%E8%A3%82BUG-%E5%88%A9%E7%94%A8%E7%8E%87%E4%BD%8E/" itemprop="url">Mysql B+树索引分裂BUG-利用率低</a></h1>
+                <a class="post-title-link" href="/2020/01/09/Mysql%20InnoDB%20B+%E6%A0%91%E7%B4%A2%E5%BC%95%E7%BB%84%E7%BB%87%E7%BB%93%E6%9E%84/" itemprop="url">Mysql InnoDB B+树索引组织结构</a></h1>
         
 
         <div class="post-meta">
@@ -602,12 +602,13 @@ TCC或者GTS(阿里)
       
         
           
-          问题InnoDB的索引分裂策略，在特定的情况下，索引页面的分裂存在问题，导致每个分裂出来的页面，仅仅存储一条记录，页面的空间利用率极低
-B+树索引结构传统关系型数据库(Oracle/MySQL/PostgreSQL…)，其主要的索引结构，使用的都是B+树。更有甚者，InnoDB引擎的表数据，整个都是
+          在计算机中磁盘存储数据最小单元是扇区，一个扇区的大小是512字节，而文件系统（例如XFS/EXT4）他的最小单元是块，一个块的大小是4k，InnoDB存储引擎也有自己的最小储存单元——页（Page），一个页的大小是16K。
+下面几张图可以帮你理解最小存储单元
+文件系统中一个文件大小只有1个字节，但不
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2020/01/09/Mysql%20B+%E6%A0%91%E7%B4%A2%E5%BC%95%E5%88%86%E8%A3%82BUG-%E5%88%A9%E7%94%A8%E7%8E%87%E4%BD%8E/#more" rel="contents">
+            <a class="btn" href="/2020/01/09/Mysql%20InnoDB%20B+%E6%A0%91%E7%B4%A2%E5%BC%95%E7%BB%84%E7%BB%87%E7%BB%93%E6%9E%84/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -785,7 +786,7 @@ B+树索引结构传统关系型数据库(Oracle/MySQL/PostgreSQL…)，其主�
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://wpy2016.github.io/2020/01/09/Mysql%20InnoDB%20B+%E6%A0%91%E7%B4%A2%E5%BC%95%E7%BB%84%E7%BB%87%E7%BB%93%E6%9E%84/">
+    <link itemprop="mainEntityOfPage" href="https://wpy2016.github.io/2020/01/09/Mysql%20B+%E6%A0%91%E7%B4%A2%E5%BC%95%E5%88%86%E8%A3%82BUG-%E5%88%A9%E7%94%A8%E7%8E%87%E4%BD%8E/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="XiaoBai">
@@ -804,7 +805,7 @@ B+树索引结构传统关系型数据库(Oracle/MySQL/PostgreSQL…)，其主�
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2020/01/09/Mysql%20InnoDB%20B+%E6%A0%91%E7%B4%A2%E5%BC%95%E7%BB%84%E7%BB%87%E7%BB%93%E6%9E%84/" itemprop="url">Mysql InnoDB B+树索引组织结构</a></h1>
+                <a class="post-title-link" href="/2020/01/09/Mysql%20B+%E6%A0%91%E7%B4%A2%E5%BC%95%E5%88%86%E8%A3%82BUG-%E5%88%A9%E7%94%A8%E7%8E%87%E4%BD%8E/" itemprop="url">Mysql B+树索引分裂BUG-利用率低</a></h1>
         
 
         <div class="post-meta">
@@ -856,13 +857,12 @@ B+树索引结构传统关系型数据库(Oracle/MySQL/PostgreSQL…)，其主�
       
         
           
-          在计算机中磁盘存储数据最小单元是扇区，一个扇区的大小是512字节，而文件系统（例如XFS/EXT4）他的最小单元是块，一个块的大小是4k，InnoDB存储引擎也有自己的最小储存单元——页（Page），一个页的大小是16K。
-下面几张图可以帮你理解最小存储单元
-文件系统中一个文件大小只有1个字节，但不
+          问题InnoDB的索引分裂策略，在特定的情况下，索引页面的分裂存在问题，导致每个分裂出来的页面，仅仅存储一条记录，页面的空间利用率极低
+B+树索引结构传统关系型数据库(Oracle/MySQL/PostgreSQL…)，其主要的索引结构，使用的都是B+树。更有甚者，InnoDB引擎的表数据，整个都是
           ...
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2020/01/09/Mysql%20InnoDB%20B+%E6%A0%91%E7%B4%A2%E5%BC%95%E7%BB%84%E7%BB%87%E7%BB%93%E6%9E%84/#more" rel="contents">
+            <a class="btn" href="/2020/01/09/Mysql%20B+%E6%A0%91%E7%B4%A2%E5%BC%95%E5%88%86%E8%A3%82BUG-%E5%88%A9%E7%94%A8%E7%8E%87%E4%BD%8E/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>

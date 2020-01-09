@@ -85,17 +85,17 @@
 <meta property="og:url" content="https://wpy2016.github.io/2020/01/09/2PC%E5%92%8C3PC%E5%8E%9F%E7%90%86/index.html">
 <meta property="og:site_name" content="小白梦想家">
 <meta property="og:description" content="分布式事物常见解决方案 2PC两段提交协议 3PC三段提交协议(弥补两端提交协议缺点) TCC或者GTS(阿里) 消息中间件最终一致性  2PC两阶段提交两阶段提交又称2PC,2PC是一个非常经典的强一致、中心化的原子提交协议 这里所说的中心化是指协议中有两类节点：一个是中心化协调者节点（coordinator）和N个参与者节点（partcipant）。 两个阶段：第一阶段：投票阶段 和第二阶段：">
-<meta property="og:image" content="https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/2pc_3pc/2pc1.png?raw=true">
-<meta property="og:image" content="https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/2pc_3pc/2pc2.png?raw=true">
-<meta property="og:image" content="https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/2pc_3pc/2pc3.png?raw=true">
-<meta property="og:image" content="https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/2pc_3pc/3pc1.png?raw=true">
+<meta property="og:image" content="https://github.com/wpy2016/Blogs/blob/master/imgs/2pc_3pc/2pc1.png?raw=true">
+<meta property="og:image" content="https://github.com/wpy2016/Blogs/blob/master/imgs/2pc_3pc/2pc2.png?raw=true">
+<meta property="og:image" content="https://github.com/wpy2016/Blogs/blob/master/imgs/2pc_3pc/2pc3.png?raw=true">
+<meta property="og:image" content="https://github.com/wpy2016/Blogs/blob/master/imgs/2pc_3pc/3pc1.png?raw=true">
 <meta property="article:published_time" content="2020-01-08T17:39:04.000Z">
-<meta property="article:modified_time" content="2020-01-08T17:39:16.198Z">
+<meta property="article:modified_time" content="2020-01-09T16:35:03.111Z">
 <meta property="article:author" content="XiaoBai">
 <meta property="article:tag" content="分布式事务">
 <meta property="article:tag" content="协议">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/2pc_3pc/2pc1.png?raw=true">
+<meta name="twitter:image" content="https://github.com/wpy2016/Blogs/blob/master/imgs/2pc_3pc/2pc1.png?raw=true">
 
 
 
@@ -356,7 +356,7 @@
 <p><code>两个阶段</code>：第一阶段：<strong>投票阶段</strong> 和第二阶段：<strong>提交/执行阶段</strong>。</p>
 <p><code>举例</code> <strong>订单服务A</strong>，需要调用 <strong>支付服务B</strong> 去支付，支付成功则处理购物订单为待发货状态，否则就需要将购物订单处理为失败状态。</p>
 <p>那么看2PC阶段是如何处理的</p>
-<h4 id="1、第一阶段：投票阶段"><a href="#1、第一阶段：投票阶段" class="headerlink" title="1、第一阶段：投票阶段"></a>1、第一阶段：投票阶段</h4><p><img src="https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/2pc_3pc/2pc1.png?raw=true" alt=""></p>
+<h4 id="1、第一阶段：投票阶段"><a href="#1、第一阶段：投票阶段" class="headerlink" title="1、第一阶段：投票阶段"></a>1、第一阶段：投票阶段</h4><p><img src="https://github.com/wpy2016/Blogs/blob/master/imgs/2pc_3pc/2pc1.png?raw=true" alt=""></p>
 <p>第一阶段主要分为3步</p>
 <p>1）<code>事务询问</code></p>
 <p><strong>协调者</strong> 向所有的 <strong>参与者</strong> 发送<strong>事务预处理请求</strong>，称之为<strong>Prepare</strong>，并开始等待各 <strong>参与者</strong> 的响应。</p>
@@ -366,14 +366,14 @@
 <p>如果 <strong>参与者</strong> 成功执行了事务操作,那么就反馈给协调者 <strong>Yes</strong> 响应,表示事务可以执行,如果没有 <strong>参与者</strong> 成功执行事务,那么就反馈给协调者 <strong>No</strong> 响应,表示事务不可以执行。</p>
 <p>第一阶段执行完后，会有两种可能。1、所有都返回Yes. 2、有一个或者多个返回No。</p>
 <h4 id="2、第二阶段：提交-执行阶段（成功流程）"><a href="#2、第二阶段：提交-执行阶段（成功流程）" class="headerlink" title="2、第二阶段：提交/执行阶段（成功流程）"></a>2、第二阶段：提交/执行阶段（成功流程）</h4><p><code>成功条件</code>：所有参与者都返回Yes</p>
-<p><img src="https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/2pc_3pc/2pc2.png?raw=true" alt=""></p>
+<p><img src="https://github.com/wpy2016/Blogs/blob/master/imgs/2pc_3pc/2pc2.png?raw=true" alt=""></p>
 <p>第二阶段主要分为两步</p>
 <p> 1)<code>所有的参与者反馈给协调者的信息都是Yes,那么就会执行事务提交</code></p>
 <p> <strong>协调者</strong> 向 <strong>所有参与者</strong> 节点发出Commit请求.</p>
 <p> 2)<code>事务提交</code></p>
 <p> <strong>参与者</strong> 收到Commit请求之后,就会正式执行本地事务Commit操作,并在完成提交之后释放整个事务执行期间占用的事务资源</p>
 <h4 id="3、第二阶段：提交-执行阶段（异常流程）"><a href="#3、第二阶段：提交-执行阶段（异常流程）" class="headerlink" title="3、第二阶段：提交/执行阶段（异常流程）"></a>3、第二阶段：提交/执行阶段（异常流程）</h4><p><code>异常条件</code>：任何一个 <strong>参与者</strong> 向 <strong>协调者</strong> 反馈了 <strong>No</strong> 响应,或者等待超时之后,协调者尚未收到所有参与者的反馈响应</p>
-<p><img src="https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/2pc_3pc/2pc3.png?raw=true" alt=""></p>
+<p><img src="https://github.com/wpy2016/Blogs/blob/master/imgs/2pc_3pc/2pc3.png?raw=true" alt=""></p>
 <p>异常流程第二阶段也分为两步</p>
 <p>1)<code>发送回滚请求</code></p>
 <p> <strong>协调者</strong> 向所有参与者节点发出 <strong>RoollBack</strong> 请求.</p>
@@ -405,7 +405,7 @@
 </blockquote>
 <p>也就是说，除了引入超时机制之外，<strong>3PC把2PC的准备阶段再次一分为二</strong>，这样三阶段提交就有<code>CanCommit</code>、<code>PreCommit</code>、<code>DoCommit</code>三个阶段</p>
 <h4 id="1、CanCommit阶段"><a href="#1、CanCommit阶段" class="headerlink" title="1、CanCommit阶段"></a>1、CanCommit阶段</h4><p>之前2PC的一阶段是本地事务执行结束后，最后不Commit,等其它服务都执行结束并返回Yes，由协调者发生commit才真正执行commit。而这里的CanCommit指的是 <strong>尝试获取数据库锁</strong> 如果可以，就返回Yes</p>
-<p><img src="https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/2pc_3pc/3pc1.png?raw=true" alt=""></p>
+<p><img src="https://github.com/wpy2016/Blogs/blob/master/imgs/2pc_3pc/3pc1.png?raw=true" alt=""></p>
 <p>这阶段主要分为2步</p>
 <p><code>事务询问</code> <strong>协调者</strong> 向 <strong>参与者</strong> 发送CanCommit请求。询问是否可以执行事务提交操作。然后开始等待 <strong>参与者</strong> 的响应。<br><code>响应反馈</code> <strong>参与者</strong> 接到CanCommit请求之后，正常情况下，如果其自身认为可以顺利执行事务，则返回Yes响应，并进入预备状态。否则反馈No</p>
 <h4 id="2、PreCommit阶段"><a href="#2、PreCommit阶段" class="headerlink" title="2、PreCommit阶段"></a>2、PreCommit阶段</h4><p>在阶段一中，如果所有的参与者都返回Yes的话，那么就会进入PreCommit阶段进行事务预提交。这里的<strong>PreCommit阶段</strong> 跟上面的第一阶段是差不多的，只不过这里 <strong>协调者和参与者都引入了超时机制</strong> （2PC中只有协调者可以超时，参与者没有超时机制）。</p>
