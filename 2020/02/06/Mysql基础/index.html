@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="Mysql,B+树,索引," />
+  <meta name="keywords" content="Mysql,数据库," />
 
 
 
@@ -79,29 +79,28 @@
 
 
 
-<meta name="description" content="在计算机中磁盘存储数据最小单元是扇区，一个扇区的大小是512字节，而文件系统（例如XFS&#x2F;EXT4）他的最小单元是块，一个块的大小是4k，InnoDB存储引擎也有自己的最小储存单元——页（Page），一个页的大小是16K。 下面几张图可以帮你理解最小存储单元 文件系统中一个文件大小只有1个字节，但不得不占磁盘上4KB的空间  innodb的所有数据文件（后缀为ibd的文件），它的大小始终都是163">
+<meta name="description" content="Mysql基础三大范式  第一范式1NF：指关系模型中，对于添加的一个规范要求，所有的域都是原子性的，即数据库表的每一列都是不可分割的原子数据项，而不能是集合，数组，记录等非原子项。如果实体中某个属性有多个值，必须拆分为不同的属性，在符合第一范式1NF表中，每个域值只能是实体的一个属性或一个属性的一部分。 举例说明：  在上面的表中，“家庭信息”和“学校信息”列均不满足原子性的要求，故不满足第一范">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Mysql InnoDB B+树索引组织结构">
-<meta property="og:url" content="https://wpy2016.github.io/2020/01/09/Mysql%20InnoDB%20B+%E6%A0%91%E7%B4%A2%E5%BC%95%E7%BB%84%E7%BB%87%E7%BB%93%E6%9E%84/index.html">
+<meta property="og:title" content="Mysql基础">
+<meta property="og:url" content="https://wpy2016.github.io/2020/02/06/Mysql%E5%9F%BA%E7%A1%80/index.html">
 <meta property="og:site_name" content="小白梦想家">
-<meta property="og:description" content="在计算机中磁盘存储数据最小单元是扇区，一个扇区的大小是512字节，而文件系统（例如XFS&#x2F;EXT4）他的最小单元是块，一个块的大小是4k，InnoDB存储引擎也有自己的最小储存单元——页（Page），一个页的大小是16K。 下面几张图可以帮你理解最小存储单元 文件系统中一个文件大小只有1个字节，但不得不占磁盘上4KB的空间  innodb的所有数据文件（后缀为ibd的文件），它的大小始终都是163">
-<meta property="og:image" content="https://wpy2016.github.io/2020/01/09/Mysql%20InnoDB%20B+%E6%A0%91%E7%B4%A2%E5%BC%95%E7%BB%84%E7%BB%87%E7%BB%93%E6%9E%84/!%5B%5D(https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index0.png?raw=true">
-<meta property="og:image" content="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index1.png?raw=true">
-<meta property="og:image" content="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index2.png?raw=true">
-<meta property="og:image" content="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index3.png?raw=true">
-<meta property="og:image" content="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index4.png?raw=true">
-<meta property="og:image" content="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index5.png?raw=true">
-<meta property="og:image" content="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index6.png?raw=true">
-<meta property="og:image" content="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index6.png?raw=true">
-<meta property="og:image" content="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index7.png?raw=true">
-<meta property="article:published_time" content="2020-01-08T17:39:04.000Z">
-<meta property="article:modified_time" content="2020-01-09T16:43:48.868Z">
+<meta property="og:description" content="Mysql基础三大范式  第一范式1NF：指关系模型中，对于添加的一个规范要求，所有的域都是原子性的，即数据库表的每一列都是不可分割的原子数据项，而不能是集合，数组，记录等非原子项。如果实体中某个属性有多个值，必须拆分为不同的属性，在符合第一范式1NF表中，每个域值只能是实体的一个属性或一个属性的一部分。 举例说明：  在上面的表中，“家庭信息”和“学校信息”列均不满足原子性的要求，故不满足第一范">
+<meta property="og:image" content="https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/mysql_base/mysql_base1.png?raw=true">
+<meta property="og:image" content="https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/mysql_base/mysql_base2.png?raw=true">
+<meta property="og:image" content="https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/mysql_base/mysql_base3.png?raw=true">
+<meta property="og:image" content="https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/mysql_base/mysql_base4.png?raw=true">
+<meta property="og:image" content="https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/mysql_base/mysql_base5.png?raw=true">
+<meta property="og:image" content="https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/mysql_base/mysql_base6.png?raw=true">
+<meta property="og:image" content="https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/mysql_base/mysql_base7.png?raw=true">
+<meta property="og:image" content="https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/mysql_base/mysql_base8.png?raw=true">
+<meta property="og:image" content="https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/mysql_base/mysql_base9.png?raw=true">
+<meta property="article:published_time" content="2020-02-06T00:06:02.000Z">
+<meta property="article:modified_time" content="2020-02-06T14:03:21.905Z">
 <meta property="article:author" content="XiaoBai">
 <meta property="article:tag" content="Mysql">
-<meta property="article:tag" content="B+树">
-<meta property="article:tag" content="索引">
+<meta property="article:tag" content="数据库">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://wpy2016.github.io/2020/01/09/Mysql%20InnoDB%20B+%E6%A0%91%E7%B4%A2%E5%BC%95%E7%BB%84%E7%BB%87%E7%BB%93%E6%9E%84/!%5B%5D(https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index0.png?raw=true">
+<meta name="twitter:image" content="https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/mysql_base/mysql_base1.png?raw=true">
 
 
 
@@ -131,13 +130,13 @@
 
 
 
-  <link rel="canonical" href="https://wpy2016.github.io/2020/01/09/Mysql InnoDB B+树索引组织结构/"/>
+  <link rel="canonical" href="https://wpy2016.github.io/2020/02/06/Mysql基础/"/>
 
 
 
 
 
-  <title>Mysql InnoDB B+树索引组织结构 | 小白梦想家</title>
+  <title>Mysql基础 | 小白梦想家</title>
   
 
 
@@ -284,7 +283,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://wpy2016.github.io/2020/01/09/Mysql%20InnoDB%20B+%E6%A0%91%E7%B4%A2%E5%BC%95%E7%BB%84%E7%BB%87%E7%BB%93%E6%9E%84/">
+    <link itemprop="mainEntityOfPage" href="https://wpy2016.github.io/2020/02/06/Mysql%E5%9F%BA%E7%A1%80/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="XiaoBai">
@@ -301,7 +300,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">Mysql InnoDB B+树索引组织结构</h1>
+          <h1 class="post-title" itemprop="name headline">Mysql基础</h1>
         
 
         <div class="post-meta">
@@ -313,8 +312,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-01-09T01:39:04+08:00">
-                2020-01-09
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-02-06T08:06:02+08:00">
+                2020-02-06
               </time>
             
 
@@ -351,65 +350,56 @@
       
 
       
-        <p>在计算机中磁盘存储数据最小单元是扇区，一个扇区的大小是512字节，而文件系统（例如XFS/EXT4）他的最小单元是块，一个块的大小是4k，InnoDB存储引擎也有自己的最小储存单元——页（Page），一个页的大小是16K。</p>
-<p>下面几张图可以帮你理解最小存储单元</p>
-<p>文件系统中一个文件大小只有1个字节，但不得不占磁盘上4KB的空间</p>
-<p><img src="!%5B%5D(https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index0.png?raw=true" alt="mysql_bplus_tree_index0"></p>
-<p>innodb的所有数据文件（后缀为ibd的文件），它的大小始终都是16384（16k）的整数倍</p>
-<p><img src="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index1.png?raw=true" alt="mysql_bplus_tree_index1"></p>
-<p>磁盘扇区、文件系统、InnoDB存储引擎都有各自的最小存储单元</p>
-<p><img src="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index2.png?raw=true" alt="mysql_bplus_tree_index2"></p>
-<p>在MySQL中我们的InnoDB页的大小默认是16k，当然也可以通过参数设置</p>
-<p><img src="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index3.png?raw=true" alt="mysql_bplus_tree_index3"></p>
-<p>数据表中的数据都是存储在页中的，所以一个页中能存储多少行数据呢？假设一行数据的大小是1k，那么一个页可以存放16行这样的数据</p>
-<p>如果数据库只按这样的方式存储，那么如何查找数据就成为一个问题</p>
-<p>因为我们不知道要查找的数据存在哪个页中，也不可能把所有的页遍历一遍，那样太慢了。</p>
-<p>所以人们想了一个办法，用B+树的方式组织这些数据。如图所示</p>
-<p><img src="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index4.png?raw=true" alt="mysql_bplus_tree_index4"></p>
-<p>我们先将数据记录按主键进行排序，分别存放在不同的页中（为了便于理解我们这里一个页中只存放3条记录，实际情况可以存放很多）</p>
-<p>除了存放数据的页以外，还有存放键值+指针的页，如图中page number=3的页，该页存放键值和指向数据页的指针，这样的页由N个键值+指针组成</p>
-<p>当然它也是排好序的。这样的数据组织形式，我们称为索引组织表</p>
-<p>现在来看下，要查找一条数据，怎么查？</p>
-<p>如：<code>select * from user where id=5</code></p>
-<p>这里id是主键,我们通过这棵B+树来查找，首先找到根页，你怎么知道user表的根页在哪呢？</p>
-<p>其实每张表的根页位置在表空间文件中是固定的，即page number=3的页（这点我们下文还会进一步证明)</p>
-<p>找到根页后通过二分查找法，定位到id=5的数据应该在指针P5指向的页中，那么进一步去page number=5的页中查找，同样通过二分查询法即可找到id=5的记录</p>
-<p><code>5   zhao2   27</code></p>
-<p>现在我们清楚了InnoDB中主键索引B+树是如何组织数据、查询数据的，我们总结一下</p>
-<p><strong>1、</strong>InnoDB存储引擎的最小存储单元是页，页可以用于存放数据也可以用于存放键值+指针，在B+树中叶子节点存放数据，非叶子节点存放键值+指针</p>
-<p><strong>2、</strong>索引组织表通过非叶子节点的二分查找法以及指针确定数据在哪个页中，进而在去数据页中查找到需要的数据</p>
-<p>通常一棵B+树可以存放多少行数据？</p>
-<p>这里我们先假设B+树高为2，即存在一个根节点和若干个叶子节点，那么这棵B+树的存放总记录数为：根节点指针数*单个叶子节点记录行数</p>
-<p>上文我们已经说明单个叶子节点（页）中的记录数=16K/1K=16。（这里假设一行记录的数据大小为1k，实际上现在很多互联网业务数据记录大小通常就是1K左右）</p>
-<p>那么现在我们需要计算出非叶子节点能存放多少指针？</p>
-<p>其实这也很好算，我们假设主键ID为bigint类型，长度为8字节，而指针大小在InnoDB源码中设置为6字节，这样一共14字节</p>
-<p>我们一个页中能存放多少这样的单元，其实就代表有多少指针，即16384/14=1170</p>
-<p>那么可以算出一棵高度为2的B+树，能存放1170*16=18720条这样的数据记录</p>
-<p>根据同样的原理我们可以算出一个高度为3的B+树可以存放：1170<em>1170</em>16=21902400条这样的记录</p>
-<p>所以在InnoDB中B+树高度一般为1-3层，它就能满足千万级的数据存储</p>
-<p>在查找数据时一次页的查找代表一次IO，所以通过主键索引查询通常只需要1-3次IO操作即可查找到数据</p>
-<p>怎么得到InnoDB主键索引B+树的高度？</p>
-<p>上面我们通过推断得出B+树的高度通常是1-3，下面我们从另外一个侧面证明这个结论</p>
-<p>在InnoDB的表空间文件中，约定<strong>page number为3</strong>的代表主键索引的根页，而在根页偏移量为<strong>64</strong>的地方存放了该B+树的page level</p>
-<p>如果page level为1，树高为2，page level为2，则树高为3。即B+树的高度=page level+1；下面我们将从实际环境中尝试找到这个page level</p>
-<p>在实际操作之前，你可以通过InnoDB元数据表确认主键索引根页的page number为3，你也可以从《InnoDB存储引擎》这本书中得到确认</p>
-<p><img src="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index5.png?raw=true" alt="mysql_bplus_tree_index5"></p>
-<p><img src="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index6.png?raw=true" alt="mysql_bplus_tree_index6"></p>
-<p>可以看出数据库dbt3下的customer表、lineitem表主键索引根页的page number均为3，而其他的二级索引page number为4</p>
-<p>下面我们对数据库表空间文件做想相关的解析</p>
-<p>因为主键索引B+树的根页在整个表空间文件中的第3个页开始，所以可以算出它在文件中的偏移量：16384*3=49152（16384为页大小）</p>
-<p>另外根据《InnoDB存储引擎》中描述在根页的64偏移量位置前2个字节，保存了page level的值</p>
-<p>因此我们想要的page level的值在整个文件中的偏移量为：16384*3+64=49152+64=49216，前2个字节中</p>
-<p>接下来我们用hexdump工具，查看表空间文件指定偏移量上的数据</p>
-<p><img src="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index6.png?raw=true" alt="mysql_bplus_tree_index7"></p>
-<p><strong>linetem表的page level为2，B+树高度为page level+1=3；</strong></p>
-<p><strong>region表的page level为0，B+树高度为page level+1=1；</strong></p>
-<p><strong>customer表的page level为2，B+树高度为page level+1=3；</strong></p>
-<p>这三张表的数据量如下</p>
-<p><img src="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index7.png?raw=true" alt="mysql_bplus_tree_index8"></p>
-<p>lineitem表的数据行数为600多万，B+树高度为3，customer表数据行数只有15万，B+树高度也为3。可以看出尽管数据量差异较大，这两个表树的高度都是3</p>
-<p>换句话说这两个表通过索引查询效率并没有太大差异，因为都只需要做3次IO。那么如果有一张表行数是一千万，那么他的B+树高度依旧是3，查询效率仍然不会相差太大</p>
-<p>region表只有5行数据，当然他的B+树高度为1</p>
+        <h2 id="Mysql基础"><a href="#Mysql基础" class="headerlink" title="Mysql基础"></a>Mysql基础</h2><p><strong>三大范式</strong></p>
+<ol>
+<li><p>第一范式1NF：指关系模型中，对于添加的一个规范要求，所有的域都是原子性的，即数据库表的每一列都是不可分割的原子数据项，而不能是集合，数组，记录等非原子项。如果实体中某个属性有多个值，必须拆分为不同的属性，在符合第一范式1NF表中，每个域值只能是实体的一个属性或一个属性的一部分。</p>
+<p>举例说明：</p>
+<p><img src="https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/mysql_base/mysql_base1.png?raw=true" alt="img"></p>
+<p>在上面的表中，“家庭信息”和“学校信息”列均不满足原子性的要求，故不满足第一范式，调整如下：</p>
+<p><img src="https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/mysql_base/mysql_base2.png?raw=true" alt="img"></p>
+<p>可见，调整后的每一列都是不可再分的，因此满足第一范式（1NF）；</p>
+</li>
+<li><p>第二范式2NF：在1NF的基础上，非码属性必须完全依赖于候选码（在1NF基础上消除非主属性对主码的部分函数依赖），第二范式（2NF）要求实体的属性完全依赖于主关键字。所谓完全依赖是指不能存在仅依赖主关键字一部分的属性，如果存在，那么这个属性和主关键字的这一部分应该分离出来形成一个新的实体，新实体与原实体之间是一对多的关系。为实现区分通常需要为表加上一个列，以存储各个实例的唯一标识。简而言之，第二范式就是在第一范式的基础上属性完全依赖于主键。</p>
+<p><strong>二范式需要确保数据库表中的每一列都和主键相关，而不能只与主键的某一部分相关（主要针对联合主键而言）</strong></p>
+<p>举例说明：</p>
+<p><img src="https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/mysql_base/mysql_base3.png?raw=true" alt="img"></p>
+<p>在上图所示的情况中，同一个订单中可能包含不同的产品，因此主键必须是“订单号”和“产品号”联合组成，</p>
+<p>但可以发现，产品数量、产品折扣、产品价格与“订单号”和“产品号”都相关，但是订单金额和订单时间仅与“订单号”相关，与“产品号”无关，</p>
+<p>这样就不满足第二范式的要求，调整如下，需分成两个表：</p>
+<p> <img src="https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/mysql_base/mysql_base4.png?raw=true" alt="img"> <img src="https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/mysql_base/mysql_base5.png?raw=true" alt="img"></p>
+</li>
+<li><p>第三范式3NF：在2NF基础上，任何非主属性不依赖于其它非主属性（在2NF基础上消除传递依赖）<strong>需要确保数据表中的每一列数据都和主键直接相关，而不能间接相关，间接相关的需要拆分，拆分后，一个表中不包含已在其他表中已包含的非主关键字信息</strong>。</p>
+<p>举例说明：</p>
+<p><img src="https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/mysql_base/mysql_base6.png?raw=true" alt="img"></p>
+<p>上表中，所有属性都完全依赖于学号，所以满足第二范式，但是“班主任性别”和“班主任年龄”直接依赖的是“班主任姓名”，</p>
+<p>而不是主键“学号”，所以需做如下调整：</p>
+<p><img src="https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/mysql_base/mysql_base7.png?raw=true" alt="img"> <img src="https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/mysql_base/mysql_base8.png?raw=true" alt="img"></p>
+</li>
+</ol>
+<p><strong>4、巴斯-科德范式（BCNF）</strong>：对第二范式与第三范式中设计规范要求加强。所有非主属性对每一个候选键都是完全函数依赖； 所有的主属性对每一个不包含它的候选键，也是完全函数依赖；没有任何属性完全函数依赖于非候选键的任何一组属性。</p>
+<p>要了解 BCNF 范式，那么先看这样一个问题：</p>
+<p>若：</p>
+<ol>
+<li>某公司有若干个仓库；</li>
+<li>每个仓库只能有一名管理员，一名管理员只能在一个仓库中工作；</li>
+<li>一个仓库中可以存放多种物品，一种物品也可以存放在不同的仓库中。每种物品在每个仓库中都有对应的数量。</li>
+</ol>
+<p>那么关系模式 仓库（仓库名，管理员，物品名，数量） 属于哪一级范式？</p>
+<p>答：已知函数依赖集：仓库名 → 管理员，管理员 → 仓库名，（仓库名，物品名）→ 数量<br>码：（管理员，物品名），（仓库名，物品名）<br>主属性：仓库名、管理员、物品名<br>非主属性：数量</p>
+<p> 不存在非主属性对码的部分函数依赖和传递函数依赖。∴ 此关系模式属于3NF。</p>
+<p>基于此关系模式的关系（具体的数据）可能如图所示：</p>
+<p><img src="https://github.com/wpy2016/wpy2016.github.io/blob/master/imgs/mysql_base/mysql_base9.png?raw=true" alt="img"></p>
+<p>好，既然此关系模式已经属于了 3NF，那么这个关系模式是否存在问题呢？我们来看以下几种操作：</p>
+<ol>
+<li>先新增加一个仓库，但尚未存放任何物品，是否可以为该仓库指派管理员？——不可以，因为物品名也是主属性，根据实体完整性的要求，主属性不能为空。</li>
+<li>某仓库被清空后，需要删除所有与这个仓库相关的物品存放记录，会带来什么问题？——仓库本身与管理员的信息也被随之删除了。</li>
+<li>如果某仓库更换了管理员，会带来什么问题？——这个仓库有几条物品存放记录，就要修改多少次管理员信息。</li>
+</ol>
+<p>从这里我们可以得出结论，在某些特殊情况下，即使关系模式符合 3NF 的要求，仍然存在着插入异常，修改异常与删除异常的问题，仍然不是 ”好“ 的设计。</p>
+<p>造成此问题的原因：存在着<strong>主属性</strong>对于码的部分函数依赖与传递函数依赖。（在此例中就是存在主属性【仓库名】对于码【（管理员，物品名）】的部分函数依赖。</p>
+<p>解决办法就是要在 3NF 的基础上消除<strong>主属性</strong>对于码的部分与传递函数依赖。</p>
+<p>仓库（仓库名，管理员）<br>库存（仓库名，物品名，数量）</p>
+<p>这样，之前的插入异常，修改异常与删除异常的问题就被解决了。</p>
 
       
     </div>
@@ -429,9 +419,7 @@
           
             <a href="/tags/Mysql/" rel="tag"># Mysql</a>
           
-            <a href="/tags/B-%E6%A0%91/" rel="tag"># B+树</a>
-          
-            <a href="/tags/%E7%B4%A2%E5%BC%95/" rel="tag"># 索引</a>
+            <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/" rel="tag"># 数据库</a>
           
         </div>
       
@@ -444,8 +432,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2020/01/09/JAVA%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" rel="next" title="JAVA动态代理的实现原理">
-                <i class="fa fa-chevron-left"></i> JAVA动态代理的实现原理
+              <a href="/2020/01/09/2PC%E5%92%8C3PC%E5%8E%9F%E7%90%86/" rel="next" title="2PC和3PC分布式事务协议">
+                <i class="fa fa-chevron-left"></i> 2PC和3PC分布式事务协议
               </a>
             
           </div>
@@ -453,10 +441,6 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2020/01/09/2PC%E5%92%8C3PC%E5%8E%9F%E7%90%86/" rel="prev" title="2PC和3PC分布式事务协议">
-                2PC和3PC分布式事务协议 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -508,8 +492,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
 
-      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+      <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
@@ -566,6 +559,22 @@
         </div>
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Mysql基础"><span class="nav-number">1.</span> <span class="nav-text">Mysql基础</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       
