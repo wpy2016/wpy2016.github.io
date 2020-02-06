@@ -79,12 +79,12 @@
 
 
 
-<meta name="description" content="Mysql基础三大范式  第一范式1NF：指关系模型中，对于添加的一个规范要求，所有的域都是原子性的，即数据库表的每一列都是不可分割的原子数据项，而不能是集合，数组，记录等非原子项。如果实体中某个属性有多个值，必须拆分为不同的属性，在符合第一范式1NF表中，每个域值只能是实体的一个属性或一个属性的一部分。 举例说明：  在上面的表中，“家庭信息”和“学校信息”列均不满足原子性的要求，故不满足第一范">
+<meta name="description" content="Mysql基础数据库范式三大范式  第一范式1NF：指关系模型中，对于添加的一个规范要求，所有的域都是原子性的，即数据库表的每一列都是不可分割的原子数据项，而不能是集合，数组，记录等非原子项。如果实体中某个属性有多个值，必须拆分为不同的属性，在符合第一范式1NF表中，每个域值只能是实体的一个属性或一个属性的一部分。 举例说明：  在上面的表中，“家庭信息”和“学校信息”列均不满足原子性的要求，故不">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Mysql基础">
 <meta property="og:url" content="https://wpy2016.github.io/2020/02/06/Mysql%E5%9F%BA%E7%A1%80/index.html">
 <meta property="og:site_name" content="小白梦想家">
-<meta property="og:description" content="Mysql基础三大范式  第一范式1NF：指关系模型中，对于添加的一个规范要求，所有的域都是原子性的，即数据库表的每一列都是不可分割的原子数据项，而不能是集合，数组，记录等非原子项。如果实体中某个属性有多个值，必须拆分为不同的属性，在符合第一范式1NF表中，每个域值只能是实体的一个属性或一个属性的一部分。 举例说明：  在上面的表中，“家庭信息”和“学校信息”列均不满足原子性的要求，故不满足第一范">
+<meta property="og:description" content="Mysql基础数据库范式三大范式  第一范式1NF：指关系模型中，对于添加的一个规范要求，所有的域都是原子性的，即数据库表的每一列都是不可分割的原子数据项，而不能是集合，数组，记录等非原子项。如果实体中某个属性有多个值，必须拆分为不同的属性，在符合第一范式1NF表中，每个域值只能是实体的一个属性或一个属性的一部分。 举例说明：  在上面的表中，“家庭信息”和“学校信息”列均不满足原子性的要求，故不">
 <meta property="og:image" content="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_base/mysql_base1.png?raw=true">
 <meta property="og:image" content="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_base/mysql_base2.png?raw=true">
 <meta property="og:image" content="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_base/mysql_base3.png?raw=true">
@@ -95,7 +95,7 @@
 <meta property="og:image" content="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_base/mysql_base8.png?raw=true">
 <meta property="og:image" content="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_base/mysql_base9.png?raw=true">
 <meta property="article:published_time" content="2020-02-06T00:06:02.000Z">
-<meta property="article:modified_time" content="2020-02-06T14:12:03.865Z">
+<meta property="article:modified_time" content="2020-02-06T15:49:07.111Z">
 <meta property="article:author" content="XiaoBai">
 <meta property="article:tag" content="Mysql">
 <meta property="article:tag" content="数据库">
@@ -350,7 +350,7 @@
       
 
       
-        <h2 id="Mysql基础"><a href="#Mysql基础" class="headerlink" title="Mysql基础"></a>Mysql基础</h2><p><strong>三大范式</strong></p>
+        <h2 id="Mysql基础"><a href="#Mysql基础" class="headerlink" title="Mysql基础"></a>Mysql基础</h2><h2 id="数据库范式"><a href="#数据库范式" class="headerlink" title="数据库范式"></a>数据库范式</h2><p><strong>三大范式</strong></p>
 <ol>
 <li><p>第一范式1NF：指关系模型中，对于添加的一个规范要求，所有的域都是原子性的，即数据库表的每一列都是不可分割的原子数据项，而不能是集合，数组，记录等非原子项。如果实体中某个属性有多个值，必须拆分为不同的属性，在符合第一范式1NF表中，每个域值只能是实体的一个属性或一个属性的一部分。</p>
 <p>举例说明：</p>
@@ -432,8 +432,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2020/01/09/JAVA%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" rel="next" title="JAVA动态代理的实现原理">
-                <i class="fa fa-chevron-left"></i> JAVA动态代理的实现原理
+              <a href="/2020/01/09/2PC%E5%92%8C3PC%E5%8E%9F%E7%90%86/" rel="next" title="2PC和3PC分布式事务协议">
+                <i class="fa fa-chevron-left"></i> 2PC和3PC分布式事务协议
               </a>
             
           </div>
@@ -441,6 +441,10 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/02/06/Mysql%E9%80%BB%E8%BE%91%E6%9E%B6%E6%9E%84/" rel="prev" title="Mysql逻辑架构">
+                Mysql逻辑架构 <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -523,7 +527,7 @@
               
                 <a href="/archives/%7C%7Carchive">
               
-                  <span class="site-state-item-count">8</span>
+                  <span class="site-state-item-count">9</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -569,7 +573,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Mysql基础"><span class="nav-number">1.</span> <span class="nav-text">Mysql基础</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Mysql基础"><span class="nav-number">1.</span> <span class="nav-text">Mysql基础</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#数据库范式"><span class="nav-number">2.</span> <span class="nav-text">数据库范式</span></a></li></ol></div>
             
 
           </div>
