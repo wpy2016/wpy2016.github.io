@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Mysql,B+树,索引," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="在计算机中磁盘存储数据最小单元是扇区，一个扇区的大小是512字节，而文件系统（例如XFS&#x2F;EXT4）他的最小单元是块，一个块的大小是4k，InnoDB存储引擎也有自己的最小储存单元——页（Page），一个页的大小是16K。 下面几张图可以帮你理解最小存储单元 文件系统中一个文件大小只有1个字节，但不得不占磁盘上4KB的空间  innodb的所有数据文件（后缀为ibd的文件），它的大小始终都是163">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Mysql InnoDB B+树索引组织结构">
+<meta property="og:url" content="https://wpy2016.github.io/2020/01/09/Mysql%20InnoDB%20B+%E6%A0%91%E7%B4%A2%E5%BC%95%E7%BB%84%E7%BB%87%E7%BB%93%E6%9E%84/index.html">
+<meta property="og:site_name" content="小白梦想家">
+<meta property="og:description" content="在计算机中磁盘存储数据最小单元是扇区，一个扇区的大小是512字节，而文件系统（例如XFS&#x2F;EXT4）他的最小单元是块，一个块的大小是4k，InnoDB存储引擎也有自己的最小储存单元——页（Page），一个页的大小是16K。 下面几张图可以帮你理解最小存储单元 文件系统中一个文件大小只有1个字节，但不得不占磁盘上4KB的空间  innodb的所有数据文件（后缀为ibd的文件），它的大小始终都是163">
+<meta property="og:image" content="https://wpy2016.github.io/2020/01/09/Mysql%20InnoDB%20B+%E6%A0%91%E7%B4%A2%E5%BC%95%E7%BB%84%E7%BB%87%E7%BB%93%E6%9E%84/!%5B%5D(https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index0.png?raw=true">
+<meta property="og:image" content="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index1.png?raw=true">
+<meta property="og:image" content="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index2.png?raw=true">
+<meta property="og:image" content="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index3.png?raw=true">
+<meta property="og:image" content="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index4.png?raw=true">
+<meta property="og:image" content="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index5.png?raw=true">
+<meta property="og:image" content="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index6.png?raw=true">
+<meta property="og:image" content="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index6.png?raw=true">
+<meta property="og:image" content="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index7.png?raw=true">
+<meta property="article:published_time" content="2020-01-08T17:39:04.000Z">
+<meta property="article:modified_time" content="2021-02-07T15:44:32.213Z">
+<meta property="article:author" content="XiaoBai">
+<meta property="article:tag" content="Mysql">
+<meta property="article:tag" content="B+树">
+<meta property="article:tag" content="索引">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://wpy2016.github.io/2020/01/09/Mysql%20InnoDB%20B+%E6%A0%91%E7%B4%A2%E5%BC%95%E7%BB%84%E7%BB%87%E7%BB%93%E6%9E%84/!%5B%5D(https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index0.png?raw=true">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://wpy2016.github.io/2020/01/09/Mysql InnoDB B+树索引组织结构/"/>
+
+
+
+
+
+  <title>Mysql InnoDB B+树索引组织结构 | 小白梦想家</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+    <a href="https://github.com/wpy2016" target="_blank" rel="noopener" class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewBox="0 0 250 250" style="fill:#151513; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+	<header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">小白梦想家</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br />
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://wpy2016.github.io/2020/01/09/Mysql%20InnoDB%20B+%E6%A0%91%E7%B4%A2%E5%BC%95%E7%BB%84%E7%BB%87%E7%BB%93%E6%9E%84/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="XiaoBai">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/18080674?s=460&v=4">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="小白梦想家">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Mysql InnoDB B+树索引组织结构</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-01-09T01:39:04+08:00">
+                2020-01-09
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>在计算机中磁盘存储数据最小单元是扇区，一个扇区的大小是512字节，而文件系统（例如XFS/EXT4）他的最小单元是块，一个块的大小是4k，InnoDB存储引擎也有自己的最小储存单元——页（Page），一个页的大小是16K。</p>
+<p>下面几张图可以帮你理解最小存储单元</p>
+<p>文件系统中一个文件大小只有1个字节，但不得不占磁盘上4KB的空间</p>
+<p><img src="!%5B%5D(https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index0.png?raw=true" alt="mysql_bplus_tree_index0"></p>
+<p>innodb的所有数据文件（后缀为ibd的文件），它的大小始终都是16384（16k）的整数倍</p>
+<p><img src="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index1.png?raw=true" alt="mysql_bplus_tree_index1"></p>
+<p>磁盘扇区、文件系统、InnoDB存储引擎都有各自的最小存储单元</p>
+<p><img src="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index2.png?raw=true" alt="mysql_bplus_tree_index2"></p>
+<p>在MySQL中我们的InnoDB页的大小默认是16k，当然也可以通过参数设置</p>
+<p><img src="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index3.png?raw=true" alt="mysql_bplus_tree_index3"></p>
+<p>数据表中的数据都是存储在页中的，所以一个页中能存储多少行数据呢？假设一行数据的大小是1k，那么一个页可以存放16行这样的数据</p>
+<p>如果数据库只按这样的方式存储，那么如何查找数据就成为一个问题</p>
+<p>因为我们不知道要查找的数据存在哪个页中，也不可能把所有的页遍历一遍，那样太慢了。</p>
+<p>所以人们想了一个办法，用B+树的方式组织这些数据。如图所示</p>
+<p><img src="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index4.png?raw=true" alt="mysql_bplus_tree_index4"></p>
+<p>我们先将数据记录按主键进行排序，分别存放在不同的页中（为了便于理解我们这里一个页中只存放3条记录，实际情况可以存放很多）</p>
+<p>除了存放数据的页以外，还有存放键值+指针的页，如图中page number=3的页，该页存放键值和指向数据页的指针，这样的页由N个键值+指针组成</p>
+<p>当然它也是排好序的。这样的数据组织形式，我们称为索引组织表</p>
+<p>现在来看下，要查找一条数据，怎么查？</p>
+<p>如：<code>select * from user where id=5</code></p>
+<p>这里id是主键,我们通过这棵B+树来查找，首先找到根页，你怎么知道user表的根页在哪呢？</p>
+<p>其实每张表的根页位置在表空间文件中是固定的，即page number=3的页（这点我们下文还会进一步证明)</p>
+<p>找到根页后通过二分查找法，定位到id=5的数据应该在指针P5指向的页中，那么进一步去page number=5的页中查找，同样通过二分查询法即可找到id=5的记录</p>
+<p><code>5   zhao2   27</code></p>
+<p>现在我们清楚了InnoDB中主键索引B+树是如何组织数据、查询数据的，我们总结一下</p>
+<p><strong>1、</strong>InnoDB存储引擎的最小存储单元是页，页可以用于存放数据也可以用于存放键值+指针，在B+树中叶子节点存放数据，非叶子节点存放键值+指针</p>
+<p><strong>2、</strong>索引组织表通过非叶子节点的二分查找法以及指针确定数据在哪个页中，进而在去数据页中查找到需要的数据</p>
+<p>通常一棵B+树可以存放多少行数据？</p>
+<p>这里我们先假设B+树高为2，即存在一个根节点和若干个叶子节点，那么这棵B+树的存放总记录数为：根节点指针数*单个叶子节点记录行数</p>
+<p>上文我们已经说明单个叶子节点（页）中的记录数=16K/1K=16。（这里假设一行记录的数据大小为1k，实际上现在很多互联网业务数据记录大小通常就是1K左右）</p>
+<p>那么现在我们需要计算出非叶子节点能存放多少指针？</p>
+<p>其实这也很好算，我们假设主键ID为bigint类型，长度为8字节，而指针大小在InnoDB源码中设置为6字节，这样一共14字节</p>
+<p>我们一个页中能存放多少这样的单元，其实就代表有多少指针，即16384/14=1170</p>
+<p>那么可以算出一棵高度为2的B+树，能存放1170*16=18720条这样的数据记录</p>
+<p>根据同样的原理我们可以算出一个高度为3的B+树可以存放：1170<em>1170</em>16=21902400条这样的记录</p>
+<p>所以在InnoDB中B+树高度一般为1-3层，它就能满足千万级的数据存储</p>
+<p>在查找数据时一次页的查找代表一次IO，所以通过主键索引查询通常只需要1-3次IO操作即可查找到数据</p>
+<p>怎么得到InnoDB主键索引B+树的高度？</p>
+<p>上面我们通过推断得出B+树的高度通常是1-3，下面我们从另外一个侧面证明这个结论</p>
+<p>在InnoDB的表空间文件中，约定<strong>page number为3</strong>的代表主键索引的根页，而在根页偏移量为<strong>64</strong>的地方存放了该B+树的page level</p>
+<p>如果page level为1，树高为2，page level为2，则树高为3。即B+树的高度=page level+1；下面我们将从实际环境中尝试找到这个page level</p>
+<p>在实际操作之前，你可以通过InnoDB元数据表确认主键索引根页的page number为3，你也可以从《InnoDB存储引擎》这本书中得到确认</p>
+<p><img src="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index5.png?raw=true" alt="mysql_bplus_tree_index5"></p>
+<p><img src="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index6.png?raw=true" alt="mysql_bplus_tree_index6"></p>
+<p>可以看出数据库dbt3下的customer表、lineitem表主键索引根页的page number均为3，而其他的二级索引page number为4</p>
+<p>下面我们对数据库表空间文件做想相关的解析</p>
+<p>因为主键索引B+树的根页在整个表空间文件中的第3个页开始，所以可以算出它在文件中的偏移量：16384*3=49152（16384为页大小）</p>
+<p>另外根据《InnoDB存储引擎》中描述在根页的64偏移量位置前2个字节，保存了page level的值</p>
+<p>因此我们想要的page level的值在整个文件中的偏移量为：16384*3+64=49152+64=49216，前2个字节中</p>
+<p>接下来我们用hexdump工具，查看表空间文件指定偏移量上的数据</p>
+<p><img src="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index6.png?raw=true" alt="mysql_bplus_tree_index7"></p>
+<p><strong>linetem表的page level为2，B+树高度为page level+1=3；</strong></p>
+<p><strong>region表的page level为0，B+树高度为page level+1=1；</strong></p>
+<p><strong>customer表的page level为2，B+树高度为page level+1=3；</strong></p>
+<p>这三张表的数据量如下</p>
+<p><img src="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_structure/mysql_bplus_tree_index7.png?raw=true" alt="mysql_bplus_tree_index8"></p>
+<p>lineitem表的数据行数为600多万，B+树高度为3，customer表数据行数只有15万，B+树高度也为3。可以看出尽管数据量差异较大，这两个表树的高度都是3</p>
+<p>换句话说这两个表通过索引查询效率并没有太大差异，因为都只需要做3次IO。那么如果有一张表行数是一千万，那么他的B+树高度依旧是3，查询效率仍然不会相差太大</p>
+<p>region表只有5行数据，当然他的B+树高度为1</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Mysql/" rel="tag"># Mysql</a>
+          
+            <a href="/tags/B-%E6%A0%91/" rel="tag"># B+树</a>
+          
+            <a href="/tags/%E7%B4%A2%E5%BC%95/" rel="tag"># 索引</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/01/09/Mysql%20B+%E6%A0%91%E7%B4%A2%E5%BC%95%E5%88%86%E8%A3%82BUG-%E5%88%A9%E7%94%A8%E7%8E%87%E4%BD%8E/" rel="next" title="Mysql B+树索引分裂BUG-利用率低">
+                <i class="fa fa-chevron-left"></i> Mysql B+树索引分裂BUG-利用率低
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/01/09/JAVA%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/" rel="prev" title="JAVA动态代理的实现原理">
+                JAVA动态代理的实现原理 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="https://avatars3.githubusercontent.com/u/18080674?s=460&v=4"
+                alt="XiaoBai" />
+            
+              <p class="site-author-name" itemprop="name">XiaoBai</p>
+              <p class="site-description motion-element" itemprop="description">JAVA JVM 性能分析</p>
+          </div>
+
+<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=86 src="//music.163.com/outchain/player?type=2&id=25638273&auto=1&height=66"></iframe>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/%7C%7Carchive">
+              
+                  <span class="site-state-item-count">9</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">XiaoBai</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

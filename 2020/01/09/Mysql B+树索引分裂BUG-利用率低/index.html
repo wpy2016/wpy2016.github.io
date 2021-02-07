@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Mysql,B+树,索引," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="问题InnoDB的索引分裂策略，在特定的情况下，索引页面的分裂存在问题，导致每个分裂出来的页面，仅仅存储一条记录，页面的空间利用率极低 B+树索引结构传统关系型数据库(Oracle&#x2F;MySQL&#x2F;PostgreSQL…)，其主要的索引结构，使用的都是B+树。更有甚者，InnoDB引擎的表数据，整个都是以B+树的组织形式存放的。下图，是一个经典的B+树组织结构图(2层B+树，每个页面的扇出为4)：">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Mysql B+树索引分裂BUG-利用率低">
+<meta property="og:url" content="https://wpy2016.github.io/2020/01/09/Mysql%20B+%E6%A0%91%E7%B4%A2%E5%BC%95%E5%88%86%E8%A3%82BUG-%E5%88%A9%E7%94%A8%E7%8E%87%E4%BD%8E/index.html">
+<meta property="og:site_name" content="小白梦想家">
+<meta property="og:description" content="问题InnoDB的索引分裂策略，在特定的情况下，索引页面的分裂存在问题，导致每个分裂出来的页面，仅仅存储一条记录，页面的空间利用率极低 B+树索引结构传统关系型数据库(Oracle&#x2F;MySQL&#x2F;PostgreSQL…)，其主要的索引结构，使用的都是B+树。更有甚者，InnoDB引擎的表数据，整个都是以B+树的组织形式存放的。下图，是一个经典的B+树组织结构图(2层B+树，每个页面的扇出为4)：">
+<meta property="og:image" content="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_bug/bplustree_bug0.png?raw=true">
+<meta property="og:image" content="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_bug/bplustree_bug1.png?raw=true">
+<meta property="og:image" content="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_bug/bplustree_bug2.png?raw=true">
+<meta property="og:image" content="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_bug/bplustree_bug3.png?raw=true">
+<meta property="og:image" content="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_bug/bplustree_bug4.png?raw=true">
+<meta property="og:image" content="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_bug/bplustree_bug5.png?raw=true">
+<meta property="og:image" content="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_bug/bplustree_bug6.png?raw=true">
+<meta property="og:image" content="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_bug/bplustree_bug7.png?raw=true">
+<meta property="article:published_time" content="2020-01-08T17:39:04.000Z">
+<meta property="article:modified_time" content="2021-02-07T15:44:32.213Z">
+<meta property="article:author" content="XiaoBai">
+<meta property="article:tag" content="Mysql">
+<meta property="article:tag" content="B+树">
+<meta property="article:tag" content="索引">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_bug/bplustree_bug0.png?raw=true">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://wpy2016.github.io/2020/01/09/Mysql B+树索引分裂BUG-利用率低/"/>
+
+
+
+
+
+  <title>Mysql B+树索引分裂BUG-利用率低 | 小白梦想家</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+    <a href="https://github.com/wpy2016" target="_blank" rel="noopener" class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewBox="0 0 250 250" style="fill:#151513; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+	<header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">小白梦想家</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br />
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://wpy2016.github.io/2020/01/09/Mysql%20B+%E6%A0%91%E7%B4%A2%E5%BC%95%E5%88%86%E8%A3%82BUG-%E5%88%A9%E7%94%A8%E7%8E%87%E4%BD%8E/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="XiaoBai">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="https://avatars3.githubusercontent.com/u/18080674?s=460&v=4">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="小白梦想家">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Mysql B+树索引分裂BUG-利用率低</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-01-09T01:39:04+08:00">
+                2020-01-09
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h2><p><strong>InnoDB的索引分裂策略，在特定的情况下，索引页面的分裂存在问题，导致每个分裂出来的页面，仅仅存储一条记录，页面的空间利用率极低</strong></p>
+<h2 id="B-树索引结构"><a href="#B-树索引结构" class="headerlink" title="B+树索引结构"></a><strong>B+树索引结构</strong></h2><p>传统关系型数据库(Oracle/MySQL/PostgreSQL…)，其主要的索引结构，使用的都是B+树。更有甚者，InnoDB引擎的表数据，整个都是以B+树的组织形式存放的。下图，是一个经典的B+树组织结构图(2层B+树，每个页面的扇出为4)：</p>
+<p><img src="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_bug/bplustree_bug0.png?raw=true" alt="bplustree_bug0"></p>
+<p><strong>注意：</strong></p>
+<ul>
+<li>此B+树，以InnoDB实现的B+树结构为准；</li>
+<li>此B+树，有5条用户记录，分别是1，2，3，4，5；</li>
+<li>B+树上层页面中的记录，存储的是下层页面中的最小值(Low Key)；</li>
+<li>B+树的所有数据，均存储在B+树的叶节点；</li>
+<li>B+树叶节点的所有页面，通过双向链表链接起来；</li>
+</ul>
+<h2 id="B-树的分裂"><a href="#B-树的分裂" class="headerlink" title="B+树的分裂"></a><strong>B+树的分裂</strong></h2><p>在上图B+树的基础上，继续插入记录6，7，B+树结构会产生以下的一系列变化：</p>
+<p>插入记录6，新的B+树结构如下：</p>
+<p><img src="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_bug/bplustree_bug1.png?raw=true" alt="bplustree_bug1"></p>
+<p>插入记录7，由于叶页面中只能存放4条记录，插入记录7，导致叶页面分裂，产生一个新的叶页面</p>
+<p><img src="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_bug/bplustree_bug2.png?raw=true" alt="bplustree_bug2"></p>
+<p>传统B+树页面分裂操作分析：</p>
+<ul>
+<li>按照原页面中50%的数据量进行分裂，针对当前这个分裂操作，3，4记录保留在原有页面，5，6记录，移动到新的页面。最后将新纪录7插入到新的页面中；</li>
+<li>50%分裂策略的优势：<ul>
+<li>分裂之后，两个页面的空间利用率是一样的；如果新的插入是随机在两个页面中挑选进行，那么下一次分裂的操作就会更晚触发；</li>
+</ul>
+</li>
+<li>50%分裂策略的劣势：<ul>
+<li>空间利用率不高：按照传统50%的页面分裂策略，索引页面的空间利用率在50%左右；</li>
+<li>分裂频率较大：针对如上所示的<strong>递增插入(递减插入)</strong>，每新插入两条记录，就会导致最右的叶页面再次发生分裂；</li>
+</ul>
+</li>
+</ul>
+<h2 id="B-树分裂操作的优化"><a href="#B-树分裂操作的优化" class="headerlink" title="B+树分裂操作的优化"></a><strong>B+树分裂操作的优化</strong></h2><p>由于传统50%分裂的策略，有不足之处，因此，目前所有的关系型数据库，包括Oracle/InnoDB/PostgreSQL，以及本人以前参与研发的Oscar数据库，目前正在研发的NTSE、TNT存储引擎，都针对B+树索引的递增/递减插入进行了优化。经过优化，以上的B+树索引，在记录6插入完毕，记录7插入引起分裂之后，新的B+树结构如下图所示</p>
+<p><img src="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_bug/bplustree_bug3.png?raw=true" alt="bplustree_bug3"></p>
+<p>对比上下两个插入记录7之后，B+树索引的结构图，可以发现二者有很多的不同之处：</p>
+<ul>
+<li>新的分裂策略，在插入7时，不移动原有页面的任何记录，只是将新插入的记录7写到新页面之中；</li>
+<li>原有页面的利用率，仍旧是100%；</li>
+<li>优化分裂策略的优势：<ul>
+<li>索引分裂的代价小：不需要移动记录；</li>
+<li>索引分裂的概率降低：如果接下来的插入，仍旧是递增插入，那么需要插入4条记录，才能再次引起页面的分裂。相对于50%分裂策略，分裂的概率降低了一半；</li>
+<li>索引页面的空间利用率提高：新的分裂策略，能够保证分裂前的页面，仍旧保持100%的利用率，提高了索引的空间利用率；</li>
+</ul>
+</li>
+<li>优化分裂策略的劣势：<ul>
+<li>如果新的插入，不再满足递增插入的条件，而是插入到原有页面，那么就会导致原有页面再次分裂，增加了分裂的概率。</li>
+</ul>
+</li>
+</ul>
+<p>因此，此优化分裂策略，仅仅是针对递增递减插入有效，针对随机插入，就失去了优化的意义，反而带来了更高的分裂概率。</p>
+<p>在InnoDB的实现中，为每个索引页面维护了一个上次插入的位置，以及上次的插入是递增/递减的标识。根据这些信息，InnoDB能够判断出新插入到页面中的记录，是否仍旧满足递增/递减的约束，若满足约束，则采用优化后的分裂策略；若不满足约束，则退回到50%的分裂策略。</p>
+<p>但是，InnoDB的实现，有不足之处，会导致下面提到的一个Bug</p>
+<h2 id="Mysql-BUG"><a href="#Mysql-BUG" class="headerlink" title="Mysql BUG"></a>Mysql BUG</h2><p>在Bug#67718中提到，在特定的插入情况下，InnoDB的索引页面利用率极低，这是由于InnoDB不正确的使用优化分裂策略导致的。</p>
+<p>考虑以下的一个B+树，已有的用户数据是1，2，3，4，5，6，100，并且在插入记录100之后，引起索引页面分裂，记录100在分裂后被插入到新的页面</p>
+<p><img src="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_bug/bplustree_bug4.png?raw=true" alt="bplustree_bug4"></p>
+<p>由于插入100能够满足递增的判断条件，因此采用了优化分裂策略，分裂不移动数据，新纪录100插入到新页面之中，原有页面的最后插入位置仍旧是6号记录不变，原有页面仍旧保持递增的插入标识不变。</p>
+<p>此时，考虑连续插入9，8，7这几条记录，会得到什么样的B+树？此时，全局递增插入变为全局递减插入。</p>
+<p>插入记录9后的B+树结构</p>
+<p><img src="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_bug/bplustree_bug5.png?raw=true" alt="bplustree_bug5"></p>
+<p>由于InnoDB的B+树，上层节点保存的是下层页面中的最小值(Low Key)，因此记录9仍旧会插入到【3，4，5，6】页面，此时页面已满，需要分裂。而且判断出记录9仍旧满足页面中的递增判断条件(Last_Insert_Pos = 6，9插入到6之后，并且原来是递增插入的)。因此，采用优化的分裂策略，产生新的页面插入记录9，原有页面记录保持不变</p>
+<p>插入记录8后的B+树结构：</p>
+<p><img src="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_bug/bplustree_bug6.png?raw=true" alt="bplustree_bug6"></p>
+<p>插入记录7，也一样。采用优化的分裂策略，记录7独占一个页面</p>
+<p>分析：</p>
+<ul>
+<li>Bug#67718的主要副作用<ul>
+<li>是页面的利用率极低，每个索引叶页面，只能存放一条记录；</li>
+</ul>
+</li>
+<li>Bug#67718的主要原因<ul>
+<li>InnoDB错误的采用了优化的索引分裂策略。InnoDB判断是否满足递增/递减的插入模式，采用的是页面级的判断，哪怕全局的模式发生了变化，只要页面内记录的模式未变，仍旧会选择优化后的索引分裂策略</li>
+</ul>
+</li>
+</ul>
+<h2 id="修复Bug-67718的建议"><a href="#修复Bug-67718的建议" class="headerlink" title="修复Bug#67718的建议"></a><strong>修复Bug#67718的建议</strong></h2><p>解决方案是：每次分裂，若插入的记录是页面中的最后一条记录，则至少将此记录前一条记录分裂到新页面之中。采用此策略，针对100，9，8这一个系列的插入，会产生以下的系列B+树：</p>
+<p>插入100，9，8后的B+树：</p>
+<p><img src="https://github.com/wpy2016/Blogs/blob/master/imgs/mysql_bplus_index_bug/bplustree_bug7.png?raw=true" alt="bplustree_bug7"></p>
+<p>插入100时，移动原有页面最后一条记录到新的页面(将6移动到新页面)，此时新页面中的记录为【6，100】。接下来插入9，8，都会插入到新的页面之中，不会产生分裂操作，空间利用率提高，减少了索引页面分裂，解决了Bug#67718的问题。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Mysql/" rel="tag"># Mysql</a>
+          
+            <a href="/tags/B-%E6%A0%91/" rel="tag"># B+树</a>
+          
+            <a href="/tags/%E7%B4%A2%E5%BC%95/" rel="tag"># 索引</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/01/09/Spring%20Cloud%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/" rel="next" title="Spring Cloud 底层原理">
+                <i class="fa fa-chevron-left"></i> Spring Cloud 底层原理
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/01/09/Mysql%20InnoDB%20B+%E6%A0%91%E7%B4%A2%E5%BC%95%E7%BB%84%E7%BB%87%E7%BB%93%E6%9E%84/" rel="prev" title="Mysql InnoDB B+树索引组织结构">
+                Mysql InnoDB B+树索引组织结构 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="https://avatars3.githubusercontent.com/u/18080674?s=460&v=4"
+                alt="XiaoBai" />
+            
+              <p class="site-author-name" itemprop="name">XiaoBai</p>
+              <p class="site-description motion-element" itemprop="description">JAVA JVM 性能分析</p>
+          </div>
+
+<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=86 src="//music.163.com/outchain/player?type=2&id=25638273&auto=1&height=66"></iframe>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/%7C%7Carchive">
+              
+                  <span class="site-state-item-count">9</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#问题"><span class="nav-number">1.</span> <span class="nav-text">问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#B-树索引结构"><span class="nav-number">2.</span> <span class="nav-text">B+树索引结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#B-树的分裂"><span class="nav-number">3.</span> <span class="nav-text">B+树的分裂</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#B-树分裂操作的优化"><span class="nav-number">4.</span> <span class="nav-text">B+树分裂操作的优化</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Mysql-BUG"><span class="nav-number">5.</span> <span class="nav-text">Mysql BUG</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#修复Bug-67718的建议"><span class="nav-number">6.</span> <span class="nav-text">修复Bug#67718的建议</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">XiaoBai</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
